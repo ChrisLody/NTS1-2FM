@@ -10,37 +10,37 @@
         "num_param": 6,
         "params": [
             [
-                "Ratio",
+                "Rtio",
                 -100,
                 100,
                 "%"
             ],
             [
-                "Car Fine",
+                "Fine",
                 0,
                 100,
                 "%"
             ],
             [
-                "M Attack",
+                "Atck",
                 0,
                 100,
                 "%"
             ],
             [
-                "M Decay",
+                "Dcay",
                 0,
                 100,
                 "%"
             ],
             [
-                "M Sustain",
+                "Sust",
                 0,
                 100,
                 "%"
             ],
             [
-                "M Release",
+                "Rels",
                 0,
                 100,
                 "%"
