@@ -6,6 +6,8 @@
 
 **2FM2** adds an independent ADSR envelope to the modulator output. Its changing output level also changes the feedback character, producing lively evolving timbres reminiscent of early OPN-style FM synthesis.
 
+**NOTE: 2FM2 will not create an FM tone until its modulation envelope is adjusted. This because it will initialise with attack, decay, sustain and release set to minimum.**
+
 Both oscillators use two sine operators with reset-to-zero phase on note-on, Shape-controlled modulation depth, and a bipolar square-like/saw-like feedback control. The NTS-1's native Shape LFO remains supported.
 
 ## Controls
