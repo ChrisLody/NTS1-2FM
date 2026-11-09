@@ -10,13 +10,13 @@
         "num_param": 2,
         "params": [
             [
-                "Ratio",
+                "Rtio",
                 -100,
                 100,
                 "%"
             ],
             [
-                "Car Fine",
+                "Fine",
                 0,
                 100,
                 "%"
