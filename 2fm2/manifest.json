@@ -1,0 +1,50 @@
+{
+    "header": {
+        "platform": "nutekt-digital",
+        "module": "osc",
+        "api": "1.1-0",
+        "dev_id": 0,
+        "prg_id": 2,
+        "version": "1.0-0",
+        "name": "2FM2",
+        "num_param": 6,
+        "params": [
+            [
+                "Ratio",
+                -100,
+                100,
+                "%"
+            ],
+            [
+                "Car Fine",
+                0,
+                100,
+                "%"
+            ],
+            [
+                "M Attack",
+                0,
+                100,
+                "%"
+            ],
+            [
+                "M Decay",
+                0,
+                100,
+                "%"
+            ],
+            [
+                "M Sustain",
+                0,
+                100,
+                "%"
+            ],
+            [
+                "M Release",
+                0,
+                100,
+                "%"
+            ]
+        ]
+    }
+}
