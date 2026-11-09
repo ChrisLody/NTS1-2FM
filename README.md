@@ -13,13 +13,13 @@ Both oscillators use two sine operators with reset-to-zero phase on note-on, Sha
 | Control | 2FM1 | 2FM2 |
 | --- | --- | --- |
 | Shape (A) | Modulator output level / FM depth | Modulator output level / FM depth |
-| Shift Shape (B) | Square-like feedback at minimum; zero at centre; saw-like feedback at maximum | Same |
+| ALt (B) | Square-like feedback at minimum; zero at centre; saw-like feedback at maximum | Same |
 | Edit 1: Ratio | Unconventional operator-ratio control (see below) | Same |
-| Edit 2: Car Fine | Adds 0.000–0.100 to the carrier multiplier | Same |
-| Edit 3: M Attack | — | Modulator envelope attack |
-| Edit 4: M Decay | — | Modulator envelope decay |
-| Edit 5: M Sustain | — | Modulator envelope sustain level |
-| Edit 6: M Release | — | Modulator envelope release |
+| Edit 2: Fine | Adds 0.000–0.100 to the carrier multiplier | Same |
+| Edit 3: Atck | — | Modulator envelope attack |
+| Edit 4: Dcay | — | Modulator envelope decay |
+| Edit 5: Sust | — | Modulator envelope sustain level |
+| Edit 6: Rels | — | Modulator envelope release |
 
 ### Ratio control
 
