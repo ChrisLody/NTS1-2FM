@@ -1,0 +1,15 @@
+# Ignore compiler outputs and local tools
+**/build/
+**/*.ntkdigunit
+**/*.elf
+**/*.bin
+**/*.hex
+**/*.dmp
+**/*.list
+**/*.map
+**/*.o
+**/*.lst
+*.bak
+*backup*
+.vscode/
+.DS_Store
