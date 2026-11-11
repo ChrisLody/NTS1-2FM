@@ -2,44 +2,52 @@
 
 // ============================================================
 // 2FM1 - TWO-OPERATOR FM TONE GENERATOR
-// Level-dependent feedback version (matched to 2FM2)
+// Final square-side soft shaping (drive 10), without ADSR
 //
 // Shape (A):       Modulator level / FM depth
-// Shift Shape (B): Square / Saw feedback
-// Parameter 1:     Ratio
-// Parameter 2:     Carrier Fine
+// Shift Shape (B): Square-like / Saw-like feedback
+// Edit parameter 1: Ratio
+// Edit parameter 2: Carrier fine
 //
-// No ADSR in 2FM1: Shape alone controls the modulator level.
-// That level now also controls the strength of self-feedback.
+// Square mode: soft-square shaping increases as B moves from
+// centre towards its negative extreme, reaching drive 10.
+// Only the signal sent to the carrier is shaped; feedback uses
+// the unshaped modulator after Shape/LFO level scaling.
+// Saw mode is unchanged. Both phases reset on note-on.
 // ============================================================
 
-// Operator phases
+// Operator phases.
 static float carrier_phase = 0.0f;
 static float modulator_phase = 0.0f;
 
-// Frequency controls
+// Frequency controls.
 static int ratio_setting = -100;
 static int carrier_fine_setting = 0;
 
-// Shape and native LFO
+// Shape and native NTS-1 LFO.
 static float shape_level = 0.0f;
 static float previous_lfo = 0.0f;
 
-// Feedback
+// Smoothed Shift Shape (B) feedback control.
 static float feedback_target = -1.0f;
 static float feedback_current = -1.0f;
 
-// Stores the modulator output AFTER Shape/LFO scaling.
+// Previous sample after Shape/LFO scaling, before square shaping.
 static float previous_modulator = 0.0f;
 
-// User-tested feedback limits (identical to 2FM2).
-static const float square_feedback_max = 0.2f;
+// Final calibration, matching 2FM2.
+static const float square_feedback_max = 0.35f;
 static const float saw_feedback_max = 0.5f;
 static const float fm_depth_max = 1.0f;
+static const float square_drive_max = 10.0f;
 
-// ============================================================
-// PHASE WRAPPING
-// ============================================================
+// Odd-symmetric, peak-preserving soft-square shaper.
+// The output sent to the feedback loop intentionally bypasses this.
+static inline float soft_square(const float x, const float drive)
+{
+    const float ax = (x < 0.0f) ? -x : x;
+    return x * (1.0f + drive) / (1.0f + drive * ax);
+}
 
 static inline float wrap_phase(float phase)
 {
@@ -51,10 +59,6 @@ static inline float wrap_phase(float phase)
 
     return phase;
 }
-
-// ============================================================
-// INITIALISATION
-// ============================================================
 
 void OSC_INIT(uint32_t platform, uint32_t api)
 {
@@ -75,10 +79,6 @@ void OSC_INIT(uint32_t platform, uint32_t api)
     previous_modulator = 0.0f;
 }
 
-// ============================================================
-// AUDIO GENERATION
-// ============================================================
-
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
@@ -88,8 +88,8 @@ void OSC_CYCLE(const user_osc_param_t * const params,
         params->pitch & 0xFF
     );
 
-    // -100 to 0: Increase modulator ratio from 1 to 11.
-    // +1 to +100: Increase carrier ratio from 1.1 to 11.
+    // Negative Ratio settings raise the modulator; positive
+    // settings raise the carrier. Fine adjusts the carrier only.
     float carrier_ratio = 1.0f;
     float modulator_ratio = 1.0f;
 
@@ -98,13 +98,11 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     else
         carrier_ratio = 1.0f + ratio_setting * 0.1f;
 
-    // Carrier Fine adds 0.000 to 0.100.
     carrier_ratio += carrier_fine_setting * 0.001f;
 
     const float carrier_increment = increment * carrier_ratio;
     const float modulator_increment = increment * modulator_ratio;
 
-    // NTS-1 native LFO interpolation, unchanged.
     const float target_lfo = q31_to_f32(params->shape_lfo);
     const float lfo_step = (frames > 0)
         ? (target_lfo - previous_lfo) / frames
@@ -113,7 +111,7 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
     for (uint32_t i = 0; i < frames; i++)
     {
-        // Smooth B knob movements, without filtering the feedback audio.
+        // Smooth B, but do not low-pass the feedback audio.
         feedback_current +=
             0.004f * (feedback_target - feedback_current);
 
@@ -121,15 +119,15 @@ void OSC_CYCLE(const user_osc_param_t * const params,
         if (magnitude < 0.0f)
             magnitude = -magnitude;
 
-        // Preserve the user-tested squared feedback curve.
-        const float feedback_curve = magnitude * magnitude;
+        // Cubic response on BOTH halves of B.
+        const float feedback_curve = magnitude * magnitude * magnitude;
         const float feedback_max = (feedback_current < 0.0f)
             ? square_feedback_max
             : saw_feedback_max;
         const float feedback_amount = feedback_curve * feedback_max;
 
-        // Feedback uses the previous level-scaled modulator output.
-        // Square side rectifies it; saw side uses it directly.
+        // Rectify previous output only on the negative (square) side.
+        // The positive (saw) side retains the original self-feedback.
         float feedback_input = previous_modulator;
         if (feedback_current < 0.0f && feedback_input < 0.0f)
             feedback_input = -feedback_input;
@@ -139,22 +137,32 @@ void OSC_CYCLE(const user_osc_param_t * const params,
         );
         const float modulator = osc_sinf(mod_phase);
 
-        // Shape and native LFO set the output level of the modulator.
+        // Shape the modulator sent to the carrier on the square side
+        // only. Checking both current and target avoids shaping
+        // leaking into the saw side during B-knob smoothing.
+        float modulator_for_carrier = modulator;
+        if (feedback_target < 0.0f && feedback_current < 0.0f)
+        {
+            const float drive = square_drive_max * magnitude;
+            modulator_for_carrier = soft_square(modulator, drive);
+        }
+
         const float depth =
             clip01f(shape_level + lfo) * fm_depth_max;
 
-        // CHANGE: Feed the same Shape-scaled output into BOTH
-        // the carrier's phase input and the modulator feedback history.
-        // In 2FM2 this is additionally multiplied by the ADSR;
-        // 2FM1 deliberately has no envelope.
-        const float modulator_output = modulator * depth;
-        previous_modulator = modulator_output;
+        // The carrier hears the shaped modulator on the square side.
+        const float modulator_output = modulator_for_carrier * depth;
+
+        // Feedback instead receives the UNshaped level-scaled sample.
+        // This retains output-level-dependent feedback while keeping
+        // the new square waveshaper outside the feedback loop.
+        previous_modulator = modulator * depth;
 
         const float fm_phase = wrap_phase(
             carrier_phase + modulator_output
         );
 
-        const float sample = 0.5f * osc_sinf(fm_phase);
+        const float sample = 0.7f * osc_sinf(fm_phase);
         yn[i] = f32_to_q31(sample);
 
         carrier_phase += carrier_increment;
@@ -167,10 +175,6 @@ void OSC_CYCLE(const user_osc_param_t * const params,
     previous_lfo = target_lfo;
 }
 
-// ============================================================
-// NOTE ON
-// ============================================================
-
 void OSC_NOTEON(const user_osc_param_t * const params)
 {
     (void)params;
@@ -180,15 +184,11 @@ void OSC_NOTEON(const user_osc_param_t * const params)
     previous_modulator = 0.0f;
 }
 
-// ============================================================
-// PARAMETER HANDLING
-// ============================================================
-
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
     switch (index)
     {
-        // Ratio: -100 to +100
+        // Ratio: displayed as -100 to +100, SDK sends 0 to 200.
         case k_user_osc_param_id1:
         {
             int setting = (int)value - 100;
@@ -198,7 +198,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
             break;
         }
 
-        // Carrier Fine: 0 to 100
+        // Carrier fine: 0 to +0.1 in 0.001 steps.
         case k_user_osc_param_id2:
         {
             if (value > 100) value = 100;
@@ -206,23 +206,19 @@ void OSC_PARAM(uint16_t index, uint16_t value)
             break;
         }
 
-        // Shape: FM depth and feedback scaling
+        // Shape (A): modulator level / FM depth.
         case k_user_osc_param_shape:
-        {
             shape_level = param_val_to_f32(value);
             break;
-        }
 
-        // Shift Shape: square / saw feedback
+        // Shift Shape (B): negative square, centre zero, positive saw.
         case k_user_osc_param_shiftshape:
-        {
             if (value > 1023) value = 1023;
             if (value < 512)
                 feedback_target = ((int)value - 512) / 512.0f;
             else
                 feedback_target = ((int)value - 512) / 511.0f;
             break;
-        }
 
         default:
             break;
