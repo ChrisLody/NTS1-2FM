@@ -44,9 +44,9 @@ Carrier Fine is unipolar, from 0 to 100, adding 0.001 per step to the carrier mu
 
 ### Feedback and Shape
 
-The low half of Shift Shape rectifies the feedback signal for a square-like character; the high half uses ordinary self-feedback for saw-like tones and, at high settings, noise-like textures. Feedback is **level-dependent**: the previous modulator sample is fed back *after* output-level scaling. In 2FM1 that scaling comes from Shape and the native LFO; in 2FM2 it additionally includes the modulator ADSR.
+The low half of Shift Shape rectifies the feedback signal and progressively introduces **soft-square shaping (maximum drive 10)** on the modulator signal sent to the carrier. The waveshaper stays **outside the feedback loop**. The high half uses ordinary self-feedback for saw-like tones and, at high settings, noise-like textures; **the saw-side signal path is unchanged** by square shaping. Feedback is **level-dependent**: the previous *unshaped* modulator sample is fed back *after* output-level scaling. In 2FM1 that scaling comes from Shape and the native LFO; in 2FM2 it additionally includes the modulator ADSR. The feedback knob uses a cubic response on both sides.
 
-The calibrated phase-feedback limits are **0.2 cycles (square-like)** and **0.5 cycles (saw-like)**. Shape's maximum phase-modulation depth is **1.0 cycle**.
+The calibrated phase-feedback limits are **0.35 cycles (square-like)** and **0.5 cycles (saw-like)**. Shape's maximum phase-modulation depth is **1.0 cycle**; carrier output gain is **0.7**.
 
 ### 2FM2 envelope
 
