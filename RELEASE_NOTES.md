@@ -11,6 +11,7 @@ Both units feature:
 - Shape-controlled modulator level/FM depth, with support for the NTS-1's built-in Shape LFO.
 - Bipolar Shift Shape feedback: square-like tones on one side, saw-like tones progressing to noisy textures on the other.
 - Output-level-dependent self-feedback, for lively, evolving FM character.
+- Independent soft-square shaping on the negative feedback side (fixed maximum drive 10), leaving the saw side unchanged.
 - A two-sided ratio control that independently raises the modulator or carrier ratio from 1:1 to 11:1, in 0.1 steps.
 - Unipolar carrier fine tuning (0 to +0.1 ratio).
 - Phase reset on each note-on.
