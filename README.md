@@ -15,7 +15,7 @@ Both oscillators use two sine operators with reset-to-zero phase on note-on, Sha
 | Control | 2FM1 | 2FM2 |
 | --- | --- | --- |
 | Shape (A) | Modulator output level / FM depth | Modulator output level / FM depth |
-| ALt (B) | Square-like feedback at minimum; zero at centre; saw-like feedback at maximum | Same |
+| Shift+Shape/Alt (B) | Square-like feedback at minimum; zero at centre; saw-like feedback at maximum | Same |
 | Edit 1: Ratio | Unconventional operator-ratio control (see below) | Same |
 | Edit 2: Fine | Adds 0.000–0.100 to the carrier multiplier | Same |
 | Edit 3: Atck | — | Modulator envelope attack |
